@@ -1,4 +1,3 @@
-// src/middleware/auth.js
 const adminAuth = (req, res, next) => {
   const token = "ABC";
   const isAdminAuthorized = token === "ABC";
