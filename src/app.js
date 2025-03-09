@@ -1,31 +1,43 @@
-import express from "express";
-import { adminAuth, userAuth } from "./middleware/auth.js";
-import connectDB from "./config/database.js";
+const express = require("express");
+const connectDB = require("./config/database.js");
+const User = require("./models/user.js");
 
 const app = express();
 
-
-connectDB()
-  .then(() => {
-    console.log("Database connected successfully");
-  })
-  .catch((err) => {
-    console.error("Database connection error");
-    process.exit(1); 
+app.post("/signup", async (req, res) => {
+  const userObj = new User({
+    firstName: "Vivek",
+    lastName: "Gunjal",
+    emailId: "vivek@gmail.com",
+    password: "vivek@123",
+    age: 23,
+    gender: "Male",
   });
 
-app.get("/admin/login", adminAuth, (req, res) => {
-  res.send("Welcome to admin panel");
+  //! Creating a new instance of the User model
+  const user = new User(userObj);
+
+  try {
+    await user.save();
+    res.send("User created successfully!");
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).send("Error creating user");
+  }
 });
 
-app.delete("/admin/delete", adminAuth, (req, res) => {
-  res.send("Delete user");
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    console.log("Database connected successfully");
 
-app.get("/user/login", userAuth, (req, res) => {
-  res.send("Welcome to user panel");
-});
+    app.listen(3000, () => {
+      console.log("Server is running on port 3000");
+    });
+  } catch (error) {
+    console.error("Database connection error:", error);
+    process.exit(1);
+  }
+};
 
-app.listen(3000, () => {
-  console.log("server is running on port 3000");
-});
+startServer();
