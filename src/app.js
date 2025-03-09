@@ -14,7 +14,7 @@ app.post("/signup", async (req, res) => {
     gender: "Male",
   });
 
-  //! Creating a new instance of the User model
+  //! Creating a new instance of the User model.
   const user = new User(userObj);
 
   try {
