@@ -1,21 +1,14 @@
 const express = require("express");
 const connectDB = require("./config/database.js");
 const User = require("./models/user.js");
-
 const app = express();
 
-app.post("/signup", async (req, res) => {
-  const userObj = new User({
-    firstName: "Vivek",
-    lastName: "Gunjal",
-    emailId: "vivek@gmail.com",
-    password: "vivek@123",
-    age: 23,
-    gender: "Male",
-  });
+//! Middleware to read JSON data from the request body
+app.use(express.json());
 
-  //! Creating a new instance of the User model.
-  const user = new User(userObj);
+
+app.post("/signup", async (req, res) => {
+  const user = new User(req.body);
 
   try {
     await user.save();
@@ -23,6 +16,17 @@ app.post("/signup", async (req, res) => {
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).send("Error creating user");
+  }
+});
+
+//feed api to fetch all users
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.send(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).send("Error fetching users");
   }
 });
 
