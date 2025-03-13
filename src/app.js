@@ -31,6 +31,21 @@ app.get("/feed", async (req, res) => {
   }
 });
 
+
+//find by mail
+app.get("/userEmail", async (req, res) => {
+  try {
+    const user = await User.findOne({ emailId: req.body.emailId });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    res.send(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).send("Error fetching user");
+  }
+});
+
 const startServer = async () => {
   try {
     await connectDB();
