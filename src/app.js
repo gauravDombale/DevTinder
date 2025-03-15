@@ -14,14 +14,36 @@ const saltRounds = 10;
 //* signup
 app.post("/signup", async (req, res) => {
   try {
+    //* Destructuring
+    const {
+      firstName,
+      lastName,
+      emailId,
+      password,
+      gender,
+      age,
+      skills,
+      photoUrl,
+      about,
+    } = req?.body;
+
     //* Validation
     validateSignupData(req);
 
     //* Encrypting password
-    req.body.password = await encryptPassword(req?.body?.password);
+    const hashedPassword = await encryptPassword(req?.body?.password);
 
-    const user = new User(req?.body);
-
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: hashedPassword,
+      gender,
+      age,
+      skills,
+      photoUrl,
+      about,
+    });
     await user.save();
     res.send("User created successfully!");
   } catch (error) {
