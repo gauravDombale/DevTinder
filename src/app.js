@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const connectDB = require("./config/database.js");
 const User = require("./models/user.js");
+const { validateSignupData } = require("./utils/validation.js");
 const app = express();
 
 //!Middleware to read JSON data from the request body
@@ -9,17 +10,18 @@ app.use(express.json());
 
 //* signup
 app.post("/signup", async (req, res) => {
-  const user = new User(req?.body);
-
   try {
+    //* Validation
+    validateSignupData(req);
+
+    //* Encrypting password
+
+    const user = new User(req?.body);
+
     await user.save();
     res.send("User created successfully!");
   } catch (error) {
-    console.error("Error creating user:", error);
-    // res.status(500).send("Error creating user");
-
-    //! this send error message in postman
-    res.send(error.message);
+    res.status(400).send(error.message);
   }
 });
 
