@@ -58,14 +58,14 @@ app.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req?.body;
 
-    //validate email id
+    //? validate email id
     if (!validator.isEmail(emailId)) {
       return res.status(400).send("Invalid email");
     }
 
     const user = await User.findOne({ emailId });
     if (!user) {
-      return res.status(404).send("User not found");
+      return res.status(404).send("Invalid credentials");
     }
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
