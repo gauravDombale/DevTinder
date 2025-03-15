@@ -80,20 +80,17 @@ app.delete("/users/:id", async (req, res) => {
 //* find by id and update
 app.put("/users/:id", async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      // {new: true, },
-      { returnDocument: "before" }
-    );
-    console.log(user);
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
     if (!user) {
       return res.status(404).send("User not found");
     }
     res.send("User updated successfully");
   } catch (error) {
     console.error("Error updating user:", error);
-    res.status(500).send("Error updating user");
+    res.status(500).send(error.message);
   }
 });
 

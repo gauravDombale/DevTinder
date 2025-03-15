@@ -34,7 +34,15 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: ["male", "female", "other"],
+    required: true,
     lowercase: true,
+    trim: true,
+    validate: {
+      validator: function (v) {
+        return ["male", "female", "other"].includes(v);
+      },
+      message: (props) => `${props.value} is not a valid gender!`,
+    },
   },
   photoUrl: {
     type: String,
@@ -48,7 +56,8 @@ const userSchema = new mongoose.Schema({
   skills: {
     type: [String],
   },
-});
+},
+{timestamps: true});
 
 const User = mongoose.model("User", userSchema);
 
