@@ -55,6 +55,14 @@ const userSchema = new mongoose.Schema({
   },
   skills: {
     type: [String],
+    validate: [
+      {
+        validator: function (v) {
+          return v.length <= 5;
+        },
+        message: (props) => `Maximum of 5 skills allowed, got ${props.value.length}`
+      }
+    ]
   },
 },
 {timestamps: true});

@@ -9,7 +9,7 @@ app.use(express.json());
 
 //* signup
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
+  const user = new User(req?.body);
 
   try {
     await user.save();
@@ -37,7 +37,7 @@ app.get("/feed", async (req, res) => {
 //* find by id
 app.get("/users/:id", async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req?.params?.id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -52,7 +52,7 @@ app.get("/users/:id", async (req, res) => {
 //* find by mail
 app.get("/userEmail", async (req, res) => {
   try {
-    const user = await User.findOne({ emailId: req.body.emailId });
+    const user = await User.findOne({ emailId: req?.body?.emailId });
     if (!user) {
       return res.status(404).send("User not found");
     }
@@ -66,7 +66,7 @@ app.get("/userEmail", async (req, res) => {
 //* find by id and delete
 app.delete("/users/:id", async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findByIdAndDelete(req?.params?.id);
     if (!user) {
       return res.status(404).send("User not found");
     }
@@ -80,7 +80,22 @@ app.delete("/users/:id", async (req, res) => {
 //* find by id and update
 app.put("/users/:id", async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    const AllowedUpdates = [
+      "photoUrl",
+      "about",
+      "gender",
+      "age",
+      "skills",
+      "password",
+    ];
+    const updates = Object.keys(req?.body);
+    const isValidOperation = updates.every((update) =>
+      AllowedUpdates.includes(update)
+    );
+    if (!isValidOperation) {
+      return res.status(400).send("Invalid updates!");
+    }
+    const user = await User.findByIdAndUpdate(req?.params.id, req?.body, {
       new: true,
       runValidators: true,
     });
