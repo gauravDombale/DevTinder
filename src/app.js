@@ -2,11 +2,14 @@ const express = require("express");
 require("dotenv").config();
 const connectDB = require("./config/database.js");
 const User = require("./models/user.js");
+const { encryptPassword } = require("./utils/encrypt_password.js");
 const { validateSignupData } = require("./utils/validation.js");
 const app = express();
 
 //!Middleware to read JSON data from the request body
 app.use(express.json());
+
+const saltRounds = 10;
 
 //* signup
 app.post("/signup", async (req, res) => {
@@ -15,6 +18,7 @@ app.post("/signup", async (req, res) => {
     validateSignupData(req);
 
     //* Encrypting password
+    req.body.password = await encryptPassword(req?.body?.password);
 
     const user = new User(req?.body);
 
@@ -90,6 +94,10 @@ app.put("/users/:id", async (req, res) => {
       "skills",
       "password",
     ];
+
+    //! Encrypt password
+    req.body.password = await encryptPassword(req?.body?.password);
+
     const updates = Object.keys(req?.body);
     const isValidOperation = updates.every((update) =>
       AllowedUpdates.includes(update)
