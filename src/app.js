@@ -4,6 +4,7 @@ const connectDB = require("./config/database.js");
 const User = require("./models/user.js");
 const { encryptPassword } = require("./utils/encrypt_password.js");
 const { validateSignupData } = require("./utils/validation.js");
+const bcrypt = require("bcrypt");
 const app = express();
 
 //!Middleware to read JSON data from the request body
@@ -48,6 +49,25 @@ app.post("/signup", async (req, res) => {
     res.send("User created successfully!");
   } catch (error) {
     res.status(400).send(error.message);
+  }
+});
+
+//* login
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req?.body;
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).send("Invalid credentials");
+    }
+    res.send("Login successful");
+  } catch (error) {
+    console.error("Error logging in", error);
+    res.status(500).send("Error logging in");
   }
 });
 
