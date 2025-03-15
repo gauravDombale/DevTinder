@@ -6,6 +6,7 @@ const { encryptPassword } = require("./utils/encrypt_password.js");
 const { validateSignupData } = require("./utils/validation.js");
 const bcrypt = require("bcrypt");
 const app = express();
+const validator = require("validator");
 
 //!Middleware to read JSON data from the request body
 app.use(express.json());
@@ -56,6 +57,12 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req?.body;
+
+    //validate email id
+    if (!validator.isEmail(emailId)) {
+      return res.status(400).send("Invalid email");
+    }
+
     const user = await User.findOne({ emailId });
     if (!user) {
       return res.status(404).send("User not found");
