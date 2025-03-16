@@ -3,32 +3,33 @@ const User = require("../models/user.js");
 
 const userAuth = async (req, res, next) => {
   try {
-    //? Read the token form the cookie
-    const cookie = req.cookies;
-    const token = cookie.token;
+    const token = req.cookies.token;
 
     if (!token) {
-      return res.status(401).send("Unauthorized");
+      return res
+        .status(401)
+        .json({ error: "Unauthorized - No token provided" });
     }
 
-    //? Decode the token
-    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-      return res.status(401).send("Unauthorized");
-    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    //? Get the user id from the decoded token
-    const userId = decoded.id;
-
-    //? Check if the user exists
-    const user = await User.findById(userId);
+    const user = await User.findById(decoded.id);
     if (!user) {
-      return res.status(401).send("Unauthorized");
+      return res.status(401).json({ error: "Unauthorized - User not found" });
     }
-    //? Attach the user to the request object
+
     req.user = user;
     next();
-  } catch {}
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Unauthorized - Token expired" });
+    }
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ error: "Unauthorized - Invalid token" });
+    }
+    console.error("Authentication error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 module.exports = { userAuth };

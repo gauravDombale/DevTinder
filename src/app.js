@@ -78,7 +78,12 @@ app.post("/login", async (req, res) => {
     }
 
     //? generate jwt token, here I am hiding the user id in the token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    if (!token) {
+      return res.status(500).send("Error generating token");
+    }
 
     //? Add the jwt token to the cookie and send the response back to the user
     res.cookie("token", token);
@@ -97,16 +102,6 @@ app.get("/profile", userAuth, async (req, res) => {
     res.send(user);
   } catch (error) {
     res.status(500).send("Error fetching profile");
-  }
-});
-
-//* feed api to fetch all users
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find();
-    res.send(users);
-  } catch (error) {
-    res.status(500).send("Error fetching users");
   }
 });
 
@@ -150,5 +145,11 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something went wrong!" });
+});
 
 startServer();
