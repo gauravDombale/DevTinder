@@ -7,11 +7,14 @@ const { validateSignupData } = require("./utils/validation.js");
 const bcrypt = require("bcrypt");
 const app = express();
 const validator = require("validator");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 //!Middleware to read JSON data from the request body
 app.use(express.json());
 
-const saltRounds = 10;
+//! Middleware to read cookies
+app.use(cookieParser());
 
 //* signup
 app.post("/signup", async (req, res) => {
@@ -67,14 +70,47 @@ app.post("/login", async (req, res) => {
     if (!user) {
       return res.status(404).send("Invalid credentials");
     }
+    
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
       return res.status(401).send("Invalid credentials");
     }
+
+    //? generate jwt token, here I am hiding the user id in the token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+
+    //? Add the jwt token to the cookie and send the response back to the user
+    res.cookie("token", token);
+
     res.send("Login successful");
   } catch (error) {
     console.error("Error logging in", error);
     res.status(500).send("Error logging in");
+  }
+});
+
+//* profile api
+app.get("/profile", async (req, res) => {
+  try {
+    const cookies = req.cookies;
+
+    //? Check the jwt token
+    const token = cookies.token;
+    if (!token) {
+      return res.status(401).send("Unauthorized");
+    }
+
+    //? Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) {
+      return res.status(401).send("Unauthorized");
+    }
+    const userId = decoded.id;
+    const user = await User.findById(userId);
+    res.send(user);
+  } catch (error) {
+    console.error("Error fetching profile", error);
+    res.status(500).send("Error fetching profile");
   }
 });
 
