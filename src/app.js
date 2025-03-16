@@ -4,11 +4,8 @@ const connectDB = require("./config/database.js");
 const User = require("./models/user.js");
 const { encryptPassword } = require("./utils/encrypt_password.js");
 const { validateSignupData } = require("./utils/validation.js");
-const bcrypt = require("bcrypt");
 const app = express();
-const validator = require("validator");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
 const { userAuth } = require("./middleware/auth.js");
 
 //!Middleware to read JSON data from the request body
@@ -62,24 +59,20 @@ app.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req.body;
 
-    // Validate input
     if (!emailId || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    // Find user and explicitly select password field
     const user = await User.findOne({ emailId });
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Use getPassword method to verify password
     const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Generate token
     const token = await user.getJWTToken();
 
     // Set cookie
