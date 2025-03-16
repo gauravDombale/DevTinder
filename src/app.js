@@ -110,78 +110,29 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-//* find by id
-app.get("/users/:id", async (req, res) => {
+//* send a connection request to other user
+app.post("/connection-request", userAuth, async (req, res) => {
   try {
-    const user = await User.findById(req?.params?.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.json(user);
-    // res.send(user);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching user" });
-  }
-});
+    const { userId } = req.body;
+    const user = req.user;
+    console.log(user);
 
-//* find by mail
-app.get("/userEmail", async (req, res) => {
-  try {
-    const user = await User.findOne({ emailId: req?.body?.emailId });
-    if (!user) {
+    if (!userId) {
+      return res.status(400).send("User id is required");
+    }
+
+    const userToConnect = await User.findById(userId);
+    console.log(userToConnect);
+    if (!userToConnect) {
       return res.status(404).send("User not found");
     }
-    res.send(user);
+
+    userToConnect.connectionRequests.push(user._id);
+    await userToConnect.save();
+
+    res.send("Connection request sent successfully");
   } catch (error) {
-    res.status(500).send("Error fetching user");
-  }
-});
-
-//* find by id and delete
-app.delete("/users/:id", async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req?.params?.id);
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-    res.send("User deleted successfully");
-  } catch (error) {
-    res.status(500).send("Error deleting user");
-  }
-});
-
-//* find by id and update
-app.put("/users/:id", async (req, res) => {
-  try {
-    const AllowedUpdates = [
-      "photoUrl",
-      "about",
-      "gender",
-      "age",
-      "skills",
-      "password",
-    ];
-
-    //! Encrypt password
-    req.body.password = await encryptPassword(req?.body?.password);
-
-    const updates = Object.keys(req?.body);
-    const isValidOperation = updates.every((update) =>
-      AllowedUpdates.includes(update)
-    );
-    if (!isValidOperation) {
-      return res.status(400).send("Invalid updates!");
-    }
-    const user = await User.findByIdAndUpdate(req?.params.id, req?.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-    res.send("User updated successfully");
-  } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).send("Error sending connection request");
   }
 });
 
