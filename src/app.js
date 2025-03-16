@@ -86,7 +86,10 @@ app.post("/login", async (req, res) => {
     }
 
     //? Add the jwt token to the cookie and send the response back to the user
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      expires: new Date(Date.now() + 3600000),
+    });
 
     res.send("Login successful");
   } catch (error) {
