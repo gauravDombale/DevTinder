@@ -9,6 +9,7 @@ const app = express();
 const validator = require("validator");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middleware/auth.js");
 
 //!Middleware to read JSON data from the request body
 app.use(express.json());
@@ -70,7 +71,7 @@ app.post("/login", async (req, res) => {
     if (!user) {
       return res.status(404).send("Invalid credentials");
     }
-    
+
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
       return res.status(401).send("Invalid credentials");
@@ -84,32 +85,17 @@ app.post("/login", async (req, res) => {
 
     res.send("Login successful");
   } catch (error) {
-    console.error("Error logging in", error);
     res.status(500).send("Error logging in");
   }
 });
 
 //* profile api
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const cookies = req.cookies;
-
-    //? Check the jwt token
-    const token = cookies.token;
-    if (!token) {
-      return res.status(401).send("Unauthorized");
-    }
-
-    //? Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-      return res.status(401).send("Unauthorized");
-    }
-    const userId = decoded.id;
-    const user = await User.findById(userId);
+    //* Now you can access the user from req.user which is attached by the userAuth middleware
+    const user = req.user;
     res.send(user);
   } catch (error) {
-    console.error("Error fetching profile", error);
     res.status(500).send("Error fetching profile");
   }
 });
@@ -120,7 +106,6 @@ app.get("/feed", async (req, res) => {
     const users = await User.find();
     res.send(users);
   } catch (error) {
-    console.error("Error fetching users:", error);
     res.status(500).send("Error fetching users");
   }
 });
@@ -135,7 +120,6 @@ app.get("/users/:id", async (req, res) => {
     res.json(user);
     // res.send(user);
   } catch (error) {
-    console.error("Error fetching user:", error);
     res.status(500).json({ message: "Error fetching user" });
   }
 });
@@ -149,7 +133,6 @@ app.get("/userEmail", async (req, res) => {
     }
     res.send(user);
   } catch (error) {
-    console.error("Error fetching user:", error);
     res.status(500).send("Error fetching user");
   }
 });
@@ -163,7 +146,6 @@ app.delete("/users/:id", async (req, res) => {
     }
     res.send("User deleted successfully");
   } catch (error) {
-    console.error("Error deleting user:", error);
     res.status(500).send("Error deleting user");
   }
 });
@@ -199,7 +181,6 @@ app.put("/users/:id", async (req, res) => {
     }
     res.send("User updated successfully");
   } catch (error) {
-    console.error("Error updating user:", error);
     res.status(500).send(error.message);
   }
 });
