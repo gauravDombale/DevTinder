@@ -60,40 +60,44 @@ app.post("/signup", async (req, res) => {
 //* login
 app.post("/login", async (req, res) => {
   try {
-    const { emailId, password } = req?.body;
+    const { emailId, password } = req.body;
 
-    //? validate email id
-    if (!validator.isEmail(emailId)) {
-      return res.status(400).send("Invalid email");
+    // Validate input
+    if (!emailId || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
     }
 
+    // Find user and explicitly select password field
     const user = await User.findOne({ emailId });
     if (!user) {
-      return res.status(404).send("Invalid credentials");
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatch) {
-      return res.status(401).send("Invalid credentials");
+    // Use getPassword method to verify password
+    const isPasswordValid = await user.validatePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    //? generate jwt token, here I am hiding the user id in the token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    if (!token) {
-      return res.status(500).send("Error generating token");
-    }
+    // Generate token
+    const token = await user.getJWTToken();
 
-    //? Add the jwt token to the cookie and send the response back to the user
+    // Set cookie
     res.cookie("token", token, {
       httpOnly: true,
-      expires: new Date(Date.now() + 3600000),
+      maxAge: 3600000,
     });
 
-    res.send("Login successful");
+    res.json({
+      message: "Login successful",
+      user: {
+        id: user._id,
+        email: user.emailId,
+        name: `${user.firstName} ${user.lastName}`,
+      },
+    });
   } catch (error) {
-    res.status(500).send("Error logging in");
+    res.status(500).json({ error: "Login failed" });
   }
 });
 
