@@ -14,9 +14,9 @@ const authRouter = require("./routes/auth.js");
 const profileRouter = require("./routes/profile.js");
 const requestsRouter = require("./routes/requests.js");
 
-app.use("/auth", authRouter);
-app.use("/profile", profileRouter);
-app.use("/requests", requestsRouter);
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestsRouter);
 
 //* start server
 const startServer = async () => {
