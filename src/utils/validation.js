@@ -35,7 +35,32 @@ const validateProfileEditData = (req) => {
   return isValidUpdate;
 };
 
+const validateProfilePassword = (req) => {
+  const allowedUpdate = ["password"];
+  const updates = Object.keys(req.body);
+
+  // Validate presence of password
+  if (!req.body.password) {
+    throw new Error("password is required");
+  }
+
+  // Validate password strength
+  if (!validator.isStrongPassword(req.body.password)) {
+    throw new Error("Password is not strong enough");
+  }
+
+  const isValidUpdate = updates.every((update) =>
+    allowedUpdate.includes(update)
+  );
+  if (!isValidUpdate) {
+    throw new Error("Invalid updates");
+  }
+
+  return isValidUpdate;
+};
+
 module.exports = {
   validateSignupData,
   validateProfileEditData,
+  validateProfilePassword,
 };

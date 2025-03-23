@@ -81,7 +81,11 @@ authRouter.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: "Login failed" });
+    res.status(500).json({
+      error:
+        "Login failed. Please check your email and password and try again.",
+      data: error.message,
+    });
   }
 });
 
