@@ -31,7 +31,10 @@ profileRouter.put("/profile/update", userAuth, async (req, res) => {
     const updates = Object.keys(req.body);
     updates.forEach((update) => (user[update] = req.body[update]));
     await user.save();
-    res.send("Profile updated successfully");
+    res.json({
+      message: "Profile updated successfully",
+      data: user,
+    })
   } catch (error) {
     res.status(500).send(`Error updating profile: ${error.message}`);
   }
