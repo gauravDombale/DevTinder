@@ -12,6 +12,30 @@ const validateSignupData = (req) => {
   }
 };
 
+const validateProfileEditData = (req) => {
+  const allowedUpdates = [
+    "firstName",
+    "lastName",
+    "emailId",
+    "about",
+    "photoUrl",
+    "age",
+    "gender",
+    "skills",
+  ];
+  const updates = Object.keys(req.body);
+  const isValidUpdate = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+
+  if (!isValidUpdate) {
+    throw new Error("Invalid updates");
+  }
+  console.log("GAURAV", isValidUpdate);
+  return isValidUpdate;
+};
+
 module.exports = {
   validateSignupData,
+  validateProfileEditData,
 };
