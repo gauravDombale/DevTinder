@@ -47,16 +47,13 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["male", "female", "other"],
+      enum: {
+        values: ["male", "female", "other"],
+        message: "{VALUE} is not a valid gender",
+      },
       required: true,
       lowercase: true,
       trim: true,
-      validate: {
-        validator: function (v) {
-          return ["male", "female", "other"].includes(v);
-        },
-        message: (props) => `${props.value} is not a valid gender!`,
-      },
     },
     photoUrl: {
       type: String,
@@ -85,12 +82,6 @@ const userSchema = new mongoose.Schema(
         },
       ],
     },
-    connectionRequests: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
   },
   { timestamps: true }
 );
