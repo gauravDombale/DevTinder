@@ -28,6 +28,24 @@ requestsRouter.post(
 
       const fromUserId = req.user._id;
       const toUserId = req.params.toUserId;
+
+      // Prevent sending request to self
+      if (fromUserId.toString() === toUserId) {
+        return res.status(400).json({ error: "Cannot send request to yourself" });
+      }
+
+      // Check if any request already exists between the users (in either direction)
+      const existingRequest = await ConnectionRequest.findOne({
+        $or: [
+          { fromUserId, toUserId },
+          { fromUserId: toUserId, toUserId: fromUserId }
+        ]
+      });
+
+      if (existingRequest) {
+        return res.status(400).json({ error: "A connection request already exists between these users" });
+      }
+
       const request = new ConnectionRequest({
         fromUserId,
         toUserId,
@@ -43,7 +61,7 @@ requestsRouter.post(
 
 //* Combined endpoint for review connection requests
 requestsRouter.post(
-  "/request/review/:status/:toUserId",
+  "/request/review/:status/:requestId",
   userAuth,
   async (req, res) => {
     try {
@@ -54,17 +72,28 @@ requestsRouter.post(
         return res.status(400).json({ error: "Invalid status" });
       }
 
-      const fromUserId = req.user._id;
-      const toUserId = req.params.toUserId;
-      const request = new ConnectionRequest({
-        fromUserId,
-        toUserId,
-        status,
-      });
-      await request.save();
-      res.json({ message: "Connection request sent successfully" });
+      const userId = req.user._id;
+      const requestId = req.params.requestId;
+      
+      // Find the existing request
+      const existingRequest = await ConnectionRequest.findById(requestId);
+      
+      if (!existingRequest) {
+        return res.status(404).json({ error: "Connection request not found" });
+      }
+      
+      // Verify that the current user is the recipient of the request
+      if (existingRequest.toUserId.toString() !== userId.toString()) {
+        return res.status(403).json({ error: "You can only accept/reject requests sent to you" });
+      }
+      
+      // Update the request status
+      existingRequest.status = status;
+      await existingRequest.save();
+      
+      res.json({ message: `Connection request ${status} successfully` });
     } catch (error) {
-      res.status(500).json({ error: "Failed to send connection request" });
+      res.status(500).json({ error: "Failed to update connection request" });
     }
   }
 );
