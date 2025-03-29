@@ -13,28 +13,60 @@ app.use(express.json());
 //! Middleware to read cookies
 app.use(cookieParser());
 
-//* send a connection request to other user
-requestsRouter.post("/connection-request", userAuth, async (req, res) => {
-  try {
-    console.log(req.body); //{ toUserId: '67e3699920a54635046f8566' }
-    const { toUserId } = req.body;
-    const fromUserId = req.user._id; 
-    console.log(fromUserId);//new ObjectId('67e3698120a54635046f8564')
-    const connectionRequest = new ConnectionRequest({
-      fromUserId,
-      toUserId,
-    });
-    await connectionRequest.save();
-    res.json({
-      message: "Connection request sent successfully",
-      data: connectionRequest,
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: "Error sending connection request",
-      data: error.message,
-    });
+//* endpoint for sending connection requests
+requestsRouter.post(
+  "/request/send/:status/:toUserId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const validStatuses = ["interested", "ignored"];
+      const status = req.params.status;
+      
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const fromUserId = req.user._id;
+      const toUserId = req.params.toUserId;
+      const request = new ConnectionRequest({
+        fromUserId,
+        toUserId,
+        status,
+      });
+      await request.save();
+      res.json({ message: "Connection request sent successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send connection request" });
+    }
   }
-});
+);
+
+//* Combined endpoint for review connection requests
+requestsRouter.post(
+  "/request/review/:status/:toUserId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const validStatuses = ["accepted", "rejected"];
+      const status = req.params.status;
+      
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const fromUserId = req.user._id;
+      const toUserId = req.params.toUserId;
+      const request = new ConnectionRequest({
+        fromUserId,
+        toUserId,
+        status,
+      });
+      await request.save();
+      res.json({ message: "Connection request sent successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send connection request" });
+    }
+  }
+);
 
 module.exports = requestsRouter;
