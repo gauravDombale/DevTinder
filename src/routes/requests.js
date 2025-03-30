@@ -29,9 +29,10 @@ requestsRouter.post(
       const fromUserId = req.user._id;
       const toUserId = req.params.toUserId;
 
-      // Prevent sending request to self
-      if (fromUserId.toString() === toUserId) {
-        return res.status(400).json({ error: "Cannot send request to yourself" });
+      // Verify that the recipient user exists
+      const recipientUser = await User.findById(toUserId);
+      if (!recipientUser) {
+        return res.status(404).json({ error: "Recipient user not found" });
       }
 
       // Check if any request already exists between the users (in either direction)
@@ -54,6 +55,11 @@ requestsRouter.post(
       await request.save();
       res.json({ message: "Connection request sent successfully" });
     } catch (error) {
+      // Check if the error is from our pre-save hook
+      if (error.message === "Cannot send request to yourself") {
+        return res.status(400).json({ error: error.message });
+      }
+      console.error("Error sending connection request:", error);
       res.status(500).json({ error: "Failed to send connection request" });
     }
   }

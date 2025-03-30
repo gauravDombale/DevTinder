@@ -27,6 +27,15 @@ const connectionRequestSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+//* pre hook to check if the fromUserId and toUserId are the same, this get called before saving the request
+connectionRequestSchema.pre("save", function (next) {
+    if (this.fromUserId.toString() === this.toUserId.toString()) {
+        next(new Error("Cannot send request to yourself"));
+    } else {
+        next();
+    }
+});
+
 connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
 connectionRequestSchema.index({ toUserId: 1, fromUserId: 1 });
 
