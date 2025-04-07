@@ -82,7 +82,11 @@ requestsRouter.post(
       const requestId = req.params.requestId;
       
       // Find the existing request
-      const existingRequest = await ConnectionRequest.findById(requestId);
+      const existingRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: userId,
+        status: "interested",
+      });
       
       if (!existingRequest) {
         return res.status(404).json({ error: "Connection request not found" });
@@ -91,6 +95,11 @@ requestsRouter.post(
       // Verify that the current user is the recipient of the request
       if (existingRequest.toUserId.toString() !== userId.toString()) {
         return res.status(403).json({ error: "You can only accept/reject requests sent to you" });
+      }
+
+      // Check if the request has been ignored by the sender
+      if (existingRequest.status === "ignored") {
+        return res.status(403).json({ error: "Cannot modify a request that has been ignored by the sender" });
       }
       
       // Update the request status
