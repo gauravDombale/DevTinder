@@ -36,7 +36,7 @@ connectionRequestSchema.pre("save", function (next) {
     }
 });
 
-//* compound index to ensure unique requests between users
+//* compound index to ensure unique requests between users, 1 represents ascending order
 connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
 connectionRequestSchema.index({ toUserId: 1, fromUserId: 1 });
 
